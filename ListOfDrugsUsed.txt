@@ -1,0 +1,10 @@
+1) Forxiga (dapagliflozin) | https://www.ema.europa.eu/en/documents/product-information/forxiga-epar-product-information_en.pdf
+2) Plavix (Clopidogrel) | https://www.ema.europa.eu/en/documents/product-information/plavix-epar-product-information_en.pdf
+3) Xarelto (Rivaroxaban) | https://www.ema.europa.eu/en/documents/product-information/xarelto-epar-product-information_en.pdf
+4) Insulin Aspart | https://www.ema.europa.eu/en/documents/product-information/insulin-aspart-sanofi-epar-product-information_en.pdf
+5) Amoxicillin | https://www.ema.europa.eu/en/documents/referral/amoxil-article-30-referral-annex-iii_en.pdf
+6) Pregabalin | https://www.ema.europa.eu/en/documents/product-information/pregabalin-sandoz-epar-product-information_en.pdf
+7) Pioglitazone | https://www.ema.europa.eu/en/documents/product-information/pioglitazone-accord-epar-product-information_en.pdf
+8) Duloxetine | https://www.ema.europa.eu/en/documents/product-information/pioglitazone-accord-epar-product-information_en.pdf
+9) Aripiprazole | https://www.ema.europa.eu/en/documents/product-information/aripiprazole-zentiva-epar-product-information_en.pdf
+10) Febuxostat | https://www.ema.europa.eu/en/documents/product-information/febuxostat-krka-epar-product-information_en.pdf
