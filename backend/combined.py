@@ -2,11 +2,16 @@ import requests
 import json
 import os
 from PyPDF2 import PdfReader
-API_KEY = os.getenv("API_KEY", "API_KEY")
 
-def extract_section(file_path, section_title, stop_title, output_file):
+API_KEY = os.getenv("jVugwoCD6VlA6i6jMuf4azJlxtD0lV0g",
+                    "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")
+API_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+
+# Function to extract a section from a PDF
+def extract_section(pdf_reader, section_title, stop_title):
     # Load the PDF
-    reader = PdfReader(file_path)
+    reader = pdf_reader
 
     # Extract text from all pages
     full_text = ""
@@ -18,7 +23,7 @@ def extract_section(file_path, section_title, stop_title, output_file):
     section_title_lower = section_title.lower()
     stop_title_lower = stop_title.lower()
 
-    # Find the start and stop positions using `find()`
+    # Find the start and stop positions using find()
     start_pos = full_text_lower.find(section_title_lower)
     if start_pos == -1:
         return "Section title not found in document."
@@ -33,9 +38,10 @@ def extract_section(file_path, section_title, stop_title, output_file):
     return extracted_text
 
 
+# Function to find relevant dosage quotes from SMPC text
 def find_relevant_dosage_quote(smpc_text):
-    # Try to find relevant parts of the SMPC related to dosage
-    dosage_keywords = ['dosage', 'dose', '500mg', '750mg', '1g', 'mg', 'recommended dose', 'maximum dose']
+    dosage_keywords = ['dosage', 'dose', '500mg', '750mg',
+                       '1g', 'mg', 'recommended dose', 'maximum dose']
     relevant_quotes = []
 
     # Split the SMPC into sentences for better extraction
@@ -50,11 +56,7 @@ def find_relevant_dosage_quote(smpc_text):
     return ". ".join(relevant_quotes[:3]) + "."
 
 
-# Define API endpoint and API key (replace with your actual key or use an environment variable)
-API_URL = "https://openrouter.ai/api/v1/chat/completions"
-API_KEY = os.getenv("API_KEY", "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")
-
-
+# Function to check if the prescription dosage is correct according to SMPC
 def check_dosage(prescription_text, smpc_text):
     # Define the conversation with the model
     messages = [
@@ -65,8 +67,9 @@ def check_dosage(prescription_text, smpc_text):
 
             SMPC Dosage Section: {smpc_text}
 
-            Task: Please check if the prescription dosage is correct according to the SMPC. 
-            If there's an error, quote the relevant part of the SMPC snippet that indicates the mistake, 
+            Task: Please check if the prescription dosage is correct according to the SMPC.
+            Say True if the dosage is not explicitly mentioned in the SMPC. Say False if the dosage is described explicitly in the SMPC.
+            If there's an error, quote the relevant part of the SMPC snippet that indicates the mistake,
             and provide the reason for your decision. Output the result in JSON format.
             """
         }
@@ -74,10 +77,10 @@ def check_dosage(prescription_text, smpc_text):
 
     # Construct the payload for the API request
     payload = {
-        "model": "mistralai/pixtral-12b",  # Ensure the model name is correct for dosage analysis
+        "model": "mistralai/pixtral-12b",
         "messages": messages,
-        "max_tokens": 512,  # Adjust based on response length
-        "temperature": 0.0  # Lower temperature for factual correctness
+        "max_tokens": 512,
+        "temperature": 0.0
     }
 
     # Send the request to the Pixtral 12B API
@@ -104,9 +107,11 @@ def check_dosage(prescription_text, smpc_text):
             lines = message_content.split("\n")
             reason = ""
             smpc_quote = ""
-
+            error = False
             # Extract the reason and SMPC quote from the response
             for line in lines:
+                if "True" in line:
+                    error = True
                 if "The prescription dosage" in line or "incorrect" in line:
                     reason = line.strip().strip('"')
                 elif "The recommended dosage" in line:
@@ -117,7 +122,7 @@ def check_dosage(prescription_text, smpc_text):
                 smpc_quote = find_relevant_dosage_quote(smpc_text)
 
             return {
-                "error": True,
+                "error": error,
                 "reason": reason,
                 "smpc_quote": smpc_quote,
                 "smpc_quote_valid": True  # The quote is now valid as we manually extracted it
@@ -133,18 +138,107 @@ def check_dosage(prescription_text, smpc_text):
         return {"error": True, "reason": f"Exception occurred: {str(e)}", "smpc_quote": "", "smpc_quote_valid": False}
 
 
-# Example inputs
-file_path = '/Users/malikahmed/Documents/Hack UK/SMPCs/amoxil-article-30-referral-annex-iii_en.pdf'
-section_title = 'Posology and method of administration'
-stop_title = '4.3 Contraindications'
-output_file = 'extracted_section.txt'
+# Function to identify the drug based on the prescription text
+def identify_drug_from_prescription(prescription_text):
+    # Define the conversation with the model
+    messages = [
+        {
+            "role": "user",
+            "content": f"""
+            Prescription: {prescription_text}
 
-smpc_text = extract_section(file_path, section_title, stop_title, output_file)
+            Task: Please identify the drug this prescription corresponds to from the following options:
+            1) Forxiga (dapagliflozin)
+            2) Plavix (Clopidogrel)
+            3) Xarelto (Rivaroxaban)
+            4) Insulin Aspart
+            5) Amoxicillin
+            6) Pregabalin
+            7) Pioglitazone
+            8) Duloxetine
+            9) Aripiprazole
+            10) Febuxostat
+            Output only the drug name.
+            """
+        }
+    ]
 
-prescription_text = "Take 2 tablets of Amoxicillin 500mg twice daily for 7 days."
+    # Construct the payload for the API request
+    payload = {
+        "model": "mistralai/pixtral-12b",
+        "messages": messages,
+        "max_tokens": 100,
+        "temperature": 0.0
+    }
 
-# Check the dosage
-result = check_dosage(prescription_text, smpc_text)
+    # Send the request to the Pixtral 12B API
+    try:
+        response = requests.post(
+            API_URL,
+            headers={
+                "Authorization": f"Bearer {API_KEY}",
+                "Content-Type": "application/json"
+            },
+            data=json.dumps(payload)
+        )
 
-# Output the result in pretty JSON format
-print(json.dumps(result, indent=4))
+        # Parse and process the response if successful
+        if response.status_code == 200:
+            result = response.json()
+            drug_name = result['choices'][0]['message']['content'].strip()
+            print(drug_name)
+            return drug_name
+        else:
+            return f"API request failed with status code {response.status_code}"
+
+    except Exception as e:
+        return f"Exception occurred: {str(e)}"
+
+
+# Mapping of drug names to their respective file paths from the local directory
+drug_pdf_map = {
+    "Forxiga": f"{os.getcwd()}/smpcs/forxiga-epar-product-information_en.pdf",
+    "Plavix": f"{os.getcwd()}/smpcs/plavix-epar-product-information_en.pdf",
+    "Xarelto": f"{os.getcwd()}/smpcs/xarelto-epar-product-information_en.pdf",
+    "Amoxicillin": f"{os.getcwd()}/smpcs/amoxil-article-30-referral-annex-iii_en.pdf",
+    "Pregabalin": f"{os.getcwd()}/smpcs/pregabalin-sandoz-epar-product-information_en.pdf",
+    "Pioglitazone": f"{os.getcwd()}/smpcs/pioglitazone-accord-epar-product-information_en.pdf",
+    "Duloxetine": f"{os.getcwd()}/smpcs/duloxetine-epar-product-information_en.pdf",
+    "Aripiprazole": f"{os.getcwd()}/smpcs/aripiprazole-zentiva-epar-product-information_en.pdf",
+    "Febuxostat": f"{os.getcwd()}/smpcs/febuxostat-krka-epar-product-information_en.pdf",
+    "Paracetamol": f"{os.getcwd()}/smpcs/SmPC-0003.pdf",
+}
+
+
+def run_check_dosage(prescription_text):
+
+    # Identify the drug from the prescription
+    identified_drug = identify_drug_from_prescription(prescription_text)
+
+    if identified_drug in drug_pdf_map:
+        file_path = drug_pdf_map[identified_drug]
+
+        # Open the PDF file from the local path
+        try:
+            with open(file_path, 'rb') as f:
+                pdf_reader = PdfReader(f)
+
+                section_title = 'Posology and method of administration'
+                stop_title = '4.3 Contraindications'
+
+                # Extract the SMPC text for the identified drug
+                smpc_text = extract_section(
+                    pdf_reader, section_title, stop_title)
+
+                # Check the dosage
+                result = check_dosage(prescription_text, smpc_text)
+
+                # Output the result in pretty JSON format
+                print(json.dumps(result, indent=4))
+
+        except Exception as e:
+            print(f"Failed to open or process the PDF for {
+                identified_drug}: {str(e)}")
+
+    else:
+        print(f"Drug {identified_drug} not found in the local PDF map.")

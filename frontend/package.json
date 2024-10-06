@@ -38,7 +38,8 @@
     "react-native-web": "~0.19.10",
     "tamagui": "^1.112.22",
     "expo-camera": "~15.0.16",
-    "undefined": "expo-google-fonts/inter"
+    "undefined": "expo-google-fonts/inter",
+    "expo-image-picker": "~15.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
