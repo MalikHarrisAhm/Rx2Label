@@ -68,7 +68,7 @@ def check_dosage(prescription_text, smpc_text):
             SMPC Dosage Section: {smpc_text}
 
             Task: Please check if the prescription dosage is correct according to the SMPC.
-            Say True if the dosage is not explicitly mentioned in the SMPC. Say False if the dosage is described explicitly in the SMPC.
+            Say True if error is detected. Say False if no error.
             If there's an error, quote the relevant part of the SMPC snippet that indicates the mistake,
             and provide the reason for your decision. Output the result in JSON format.
             """
@@ -200,6 +200,7 @@ drug_pdf_map = {
     "Forxiga": f"{os.getcwd()}/smpcs/forxiga-epar-product-information_en.pdf",
     "Plavix": f"{os.getcwd()}/smpcs/plavix-epar-product-information_en.pdf",
     "Xarelto": f"{os.getcwd()}/smpcs/xarelto-epar-product-information_en.pdf",
+    "Insulin Aspart": "smpcs/insulin-aspart-sanofi-epar-product-information_en.pdf",
     "Amoxicillin": f"{os.getcwd()}/smpcs/amoxil-article-30-referral-annex-iii_en.pdf",
     "Pregabalin": f"{os.getcwd()}/smpcs/pregabalin-sandoz-epar-product-information_en.pdf",
     "Pioglitazone": f"{os.getcwd()}/smpcs/pioglitazone-accord-epar-product-information_en.pdf",
