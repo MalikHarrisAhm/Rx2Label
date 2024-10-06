@@ -6,6 +6,10 @@ class ImageProcess(BaseModel):
 
 
 class ImageProcessResponse(BaseModel):
+    text: str
+
+
+class CheckedRes(BaseModel):
     prescriptionText: str
     error: bool
     reason: str

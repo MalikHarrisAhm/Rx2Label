@@ -2,9 +2,8 @@ import requests
 import json
 import os
 from PyPDF2 import PdfReader
+from dotenv import load_dotenv
 
-API_KEY = os.getenv("jVugwoCD6VlA6i6jMuf4azJlxtD0lV0g",
-                    "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")
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
@@ -195,6 +194,61 @@ def identify_drug_from_prescription(prescription_text):
         return f"Exception occurred: {str(e)}"
 
 
+# Function to create a prescription label format (drug name + directions)
+def create_prescription_label(prescription_text):
+    # Define the conversation with the model
+    messages = [
+        {
+            "role": "user",
+            "content": f"""
+            Prescription: {prescription_text}
+
+            Task: Please identify the drug name and the directions for use based on the prescription text.
+            Format your output as follows:
+
+            {{
+                "drug_name": "<drug_name>",
+                "directions": "<directions>"
+            }}
+            """
+        }
+    ]
+
+    # Construct the payload for the API request
+    payload = {
+        "model": "mistralai/pixtral-12b",
+        "messages": messages,
+        "max_tokens": 200,
+        "temperature": 0.0
+    }
+
+    # Send the request to the Pixtral 12B API
+    try:
+        response = requests.post(
+            API_URL,
+            headers={
+                "Authorization": f"Bearer {API_KEY}",
+                "Content-Type": "application/json"
+            },
+            data=json.dumps(payload)
+        )
+
+        # Parse and process the response if successful
+        if response.status_code == 200:
+            result = response.json()
+            label_info = result['choices'][0]['message']['content'].strip()
+
+            # Output the label information
+            print(label_info)
+            return label_info
+
+        else:
+            return f"API request failed with status code {response.status_code}"
+
+    except Exception as e:
+        return f"Exception occurred: {str(e)}"
+
+
 # Mapping of drug names to their respective file paths from the local directory
 drug_pdf_map = {
     "Forxiga": f"{os.getcwd()}/smpcs/forxiga-epar-product-information_en.pdf",
@@ -234,12 +288,11 @@ def run_check_dosage(prescription_text):
                 # Check the dosage
                 result = check_dosage(prescription_text, smpc_text)
 
-                # Output the result in pretty JSON format
-                print(json.dumps(result, indent=4))
+                return result
 
         except Exception as e:
             print(f"Failed to open or process the PDF for {
-                identified_drug}: {str(e)}")
+                  identified_drug}: {str(e)}")
 
     else:
         print(f"Drug {identified_drug} not found in the local PDF map.")

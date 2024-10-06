@@ -3,16 +3,22 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "../ui/input";
-import Image from "next/image";
+import { Data } from "@/app/page";
 
-export default function FileUpload() {
-  const [base64String, setBase64String] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [response, setResponse] = useState(null);
+export default function FileUpload({
+  setLoading,
+  setData,
+  loading,
+}: {
+  setLoading: (loading: boolean) => void;
+  setData: (data: Data) => void;
+  loading: boolean;
+}) {
+  const [base64String, setBase64String] = useState<string | null>(null);
 
   const handleFileChange = async (event) => {
+    setBase64String("");
     const tmp: string = await convertToBase64(event.target.files[0]);
-    console.log(tmp);
     setBase64String(tmp);
   };
 
@@ -23,10 +29,10 @@ export default function FileUpload() {
       return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
     try {
       // Send the base64 string to the backend
-      const response = await fetch("http://localhost:8000/process-image", {
+      const response = await fetch("http://localhost:8000/transcribe-image", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -35,12 +41,12 @@ export default function FileUpload() {
       });
 
       const data = await response.json();
-      setResponse(data);
+      setData({ tanscription: data.text });
     } catch (error) {
       console.error("Error uploading image:", error);
-      setResponse({ error: "Failed to upload image" });
+      setData({ tanscription: undefined });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -63,7 +69,7 @@ export default function FileUpload() {
         />
       )}
       <Input type="file" accept="image/*" onChange={handleFileChange} />
-      <Button onClick={handleUpload} disabled={isLoading}>
+      <Button onClick={handleUpload} disabled={loading}>
         Process
       </Button>
     </div>

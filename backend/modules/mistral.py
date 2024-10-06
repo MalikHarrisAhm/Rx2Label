@@ -156,8 +156,6 @@ def process_image(img_path):
         "max_tokens": 1000
     }
 
-    print(img_path)
-
     try:
         res = requests.post(
             "https://api.mistral.ai/v1/chat/completions",
@@ -169,11 +167,7 @@ def process_image(img_path):
             data = res.json()
             transcription = data['choices'][0]['message']['content']
 
-            print(transcription)
-
-            res = run_check_dosage(transcription)
-            print(res)
-            return res
+            return transcription
 
         else:
             print(
