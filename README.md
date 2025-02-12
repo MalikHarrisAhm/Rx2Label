@@ -1,2 +1,2 @@
-# Rx2Label
+# Rx2Label (Mistral London Hackathon)
 Automating the dispensing of prescriptions through translating images of Rx's to prescription labels, using a combination of rule-based and LLM techniques. 
